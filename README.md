@@ -222,9 +222,87 @@ This exploratory analysis establishes a strong foundation for building an interp
 5. **Create categorical embeddings** for product/channel preferences
 
 
-### Next Steps (Task 3):
-Proceed to **Feature Engineering** using insights from EDA to create:
-- Customer-level RFM features
-- Transaction pattern features
-- Temporal behavior features
-- Risk proxy variable creation
+## Task 3: Feature Engineering - Implementation Details
+
+### 📋 Objective
+Build a robust, automated, and reproducible data processing script that transforms raw data into a model-ready format using sklearn.pipeline.Pipeline.
+
+### 🏗️ Architecture
+Implemented all 6 required feature engineering components as sklearn-compatible OOP classes:
+
+### 🔧 Key Components Implemented
+
+#### 1. **Aggregate Features** (`AggregateFeatures` class)
+- Calculated customer-level statistics from transaction data
+- **Features created:**
+  - `TotalAmount`: Sum of all transaction amounts per customer
+  - `AvgAmount`: Average transaction amount per customer  
+  - `TransactionCount`: Number of transactions per customer
+  - `StdAmount`: Standard deviation of transaction amounts
+  - `MinAmount`, `MaxAmount`, `MedianAmount`: Additional statistics
+
+#### 2. **Temporal Features** (`TemporalFeatureExtractor` class)
+- Extracted time-based patterns from TransactionStartTime
+- **Features created:**
+  - `TransactionHour`, `TransactionDay`, `TransactionMonth`, `TransactionYear`
+  - `TransactionDayOfWeek`, `TransactionWeekOfYear`, `IsWeekend`
+
+#### 3. **Categorical Encoding** (`CategoricalEncoder` class)
+- Converted categorical variables to numerical format
+- **Strategies implemented:** One-Hot Encoding and Label Encoding
+- **Encoded columns:** ProductCategory (9 categories) and ChannelId (4 channels)
+
+#### 4. **Missing Value Handling** (`MissingValueHandler` class)
+- Identified and imputed missing values
+- **Strategy used:** Median imputation for `StdAmount` (712 missing values, 0.74%)
+- **Result:** Zero missing values after processing
+
+#### 5. **Feature Scaling** (`FeatureScaler` class)
+- Normalized numerical features to common scale
+- **Strategy used:** Standardization (mean=0, std=1)
+- **Scaled features:** 17 numerical features including Amount, Value, and RFM metrics
+
+#### 6. **WoE and IV Transformation** (`WOETransformer` class)
+- Calculated Weight of Evidence (WoE) and Information Value (IV)
+- **Demonstrated using FraudResult** (Note: Will be replaced with RFM-based proxy in Task 4)
+- **IV Analysis revealed:**
+  - Amount, Value, and RFM metrics show suspiciously high IV (>0.5)
+  - Temporal features show weak to medium predictive power
+
+### 📊 Results & Output
+
+#### Data Transformation Pipeline:
+
+#### Key Statistics:
+- **Original features:** 16 columns
+- **Engineered features:** 40 columns (150% increase)
+- **Feature types:**
+  - Temporal features: 8
+  - Encoded categorical: 13  
+  - Original features: 7
+  - Aggregate RFM: 7
+  - WoE features: 5
+
+#### Data Quality:
+- **Missing values:** 0% (imputed successfully)
+- **Duplicates:** 0% (maintained data integrity)
+- **Memory optimized:** Parquet file (2.12 MB) vs CSV (73.04 MB)
+
+### 🔍 Insights from Feature Engineering
+
+1. **Customer Segmentation Revealed**: RFM metrics show clear customer tiers
+   - Top customer (CustomerId_4406): 119 transactions, $109,921 total
+   - Average transaction size varies significantly ($923.71 mean vs $1,000 median)
+
+2. **Temporal Patterns Identified**: Transaction peaks at specific hours/days
+   - Hourly distribution shows business hour concentrations
+   - Weekend vs weekday patterns evident
+
+3. **Data Scaling Required**: Extreme value ranges necessitated standardization
+   - Amount: Range -$1M to $9.88M → Standardized to mean=0, std=1
+   - Value: Similar transformation applied
+
+4. **WoE Analysis Insightful**: 
+   - High IV values suggest strong predictive power in transaction amounts
+   - Temporal features provide moderate predictive signals
+
