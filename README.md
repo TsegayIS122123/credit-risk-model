@@ -306,3 +306,101 @@ Implemented all 6 required feature engineering components as sklearn-compatible 
    - High IV values suggest strong predictive power in transaction amounts
    - Temporal features provide moderate predictive signals
 
+   ## Task 4: Proxy Target Variable Engineering - Implementation Details
+
+### 📋 Objective
+Create a credit risk proxy target variable since we don't have a pre-existing "credit risk" column in the data. Programmatically identify "disengaged" customers and label them as high-risk proxies using RFM analysis and clustering.
+
+### 🎯 The 4 Required Steps Implemented:
+
+#### **Step 1: Calculate RFM Metrics** (`RFMMetricsCalculator` class)
+- **Recency**: Days since last transaction (from consistent snapshot date)
+- **Frequency**: Number of transactions per customer
+- **Monetary**: Total positive amount spent per customer
+- **Additional**: Log-transformed versions for clustering
+
+#### **Step 2: Cluster Customers** (`RFMClustering` class)
+- Used **K-Means algorithm** to segment customers into **3 distinct groups**
+- **Proper pre-processing**: Log transformation + StandardScaler for meaningful results
+- **Reproducibility**: Set `random_state=42` as per instruction
+- **Quality metric**: Silhouette Score = 0.3328
+
+#### **Step 3: Define High-Risk Label** (`HighRiskLabelAssigner` class)
+- Analyzed clusters to identify **least engaged segment** (high recency, low frequency, low monetary)
+- Created binary target column `is_high_risk`
+- **Risk identification**: Cluster 0 identified as high-risk (1117 customers, 29.85%)
+
+#### **Step 4: Integrate Target Variable** (`TargetVariableIntegrator` class)
+- Merged `is_high_risk` column back to main processed dataset
+- Handled CustomerId format mismatches between raw and engineered data
+- Created customer-risk mapping for reference
+
+### 📊 Results & Analysis
+
+#### **RFM Statistics:**
+- Total customers: 3,742
+- Recency: Mean = 31.5 days, Range = 1-91 days
+- Frequency: Mean = 25.6 transactions, Range = 1-4,091 transactions
+- Monetary: Mean = $211,864, Range = $0-$83,466,000
+
+#### **Clustering Results:**
+- **Cluster 0** (High-risk): 1,117 customers - High recency (46.7 days), Low frequency (2.2), Low monetary ($2,997)
+- **Cluster 1** (Medium-risk): 1,633 customers - Moderate recency (36.9 days), Frequency (11.2), Monetary ($128,212)
+- **Cluster 2** (Low-risk): 992 customers - Low recency (5.5 days), High frequency (75.6), High monetary ($584,756)
+
+#### **Target Distribution:**
+
+# Customer Level:
+- High-risk customers: 1,117 (29.85%)
+- Low-risk customers: 2,625 (70.15%)
+
+# Transaction Level:
+- High-risk transactions: 2,399 (2.51%)
+- Low-risk transactions: 93,263 (97.49%)
+
+
+#### **Key Design Decisions:**
+1. **Snapshot Date**: Used max transaction date + 1 day for consistent recency calculation
+2. **Scaling Strategy**: Log transformation followed by StandardScaler before K-Means
+3. **Risk Identification**: Weighted combination of normalized RFM metrics (40% recency, 40% frequency, 20% monetary)
+4. **Data Integration**: Robust handling of CustomerId format mismatches between raw and engineered data
+
+### 📈 Business Insights
+
+1. **Clear Customer Segmentation**: RFM clustering reveals three distinct customer tiers
+2. **High-Risk Characteristics**: Customers with >46 days since last purchase, <3 transactions, <$3,000 spending
+3. **Risk Proportion**: ~30% of customers identified as high-risk, but only ~2.5% of transactions
+4. **Model Readiness**: Target variable created with reasonable class distribution for credit risk modeling
+
+### 💾 Deliverables Produced
+
+1. **Source Code**: `src/target_engineering.py` - Complete OOP implementation
+2. **Demo Notebook**: `notebooks/task4_target_engineering.ipynb` - Step-by-step execution
+3. **Processed Data**:
+   - `data/processed/task4_target_engineered.parquet` - Main dataset with target (95,662×41)
+   - `data/processed/task4_customer_risk_mapping.csv` - Customer-risk mapping (3,742×2)
+4. **Visualizations**: RFM distributions, cluster plots, risk analysis charts
+
+### 🔄 Integration with Previous Tasks
+
+- **Input**: Raw transaction data + Task 3 engineered features
+- **Process**: RFM calculation → Clustering → Risk labeling → Integration
+- **Output**: Task 3 features augmented with `is_high_risk` target variable
+- **Ready for**: Task 5 model training with complete feature-target dataset
+
+### ⚠️ Challenges & Solutions
+
+1. **CustomerId Format Mismatch**: Raw data vs Task 3 engineered features had different CustomerId formats
+   - **Solution**: Robust handling with index resetting and format normalization
+2. **High Skewness in Monetary Values**: Extreme value ranges affected clustering
+   - **Solution**: Log transformation before scaling
+3. **Transaction vs Customer Level Proportions**: Different risk proportions at different levels
+   - **Solution**: Both levels analyzed and documented
+
+### 🎯 Validation & Quality Checks
+
+ **RFM Calculation**: All 3,742 customers have RFM metrics  
+ **Clustering Quality**: Silhouette Score > 0.3 indicates meaningful clusters  
+ **Risk Identification**: High-risk cluster aligns with business logic (disengaged customers)  
+**Data Integration**: All transactions have risk labels after merge  
+ **Reproducibility**: Fixed random seeds ensure consistent results
