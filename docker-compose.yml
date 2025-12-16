@@ -10,11 +10,15 @@ services:
       - ./models:/app/models
       - ./reports:/app/reports
       - ./data:/app/data
-      - ./mlflow.db:/app/mlflow.db  # Add this for MLflow
+      - ./mlflow.db:/app/mlflow.db
+      - ./mlruns:/app/mlruns  # ADD THIS
     environment:
       - PYTHONPATH=/app
       - PYTHONUNBUFFERED=1
-      - MLFLOW_TRACKING_URI=sqlite:///mlflow.db  # Add this
+      - MLFLOW_TRACKING_URI=http://mlflow:5000  # CHANGE TO HTTP
+    depends_on:
+      mlflow:
+        condition: service_started
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
@@ -24,14 +28,24 @@ services:
       start_period: 40s
 
   mlflow:
-    image: ghcr.io/mlflow/mlflow:v2.11.3  # Match version
+    image: ghcr.io/mlflow/mlflow:v2.11.3
     container_name: mlflow-tracking
     ports:
       - "5000:5000"
     volumes:
-      - ./mlflow:/mlflow
+      - ./mlruns:/mlflow  # CHANGE TO mlruns
       - ./mlflow.db:/mlflow.db
     environment:
       - BACKEND_URI=sqlite:///mlflow.db
       - ARTIFACT_ROOT=/mlflow/artifacts
-    command: mlflow server --host 0.0.0.0 --backend-store-uri sqlite:///mlflow.db --default-artifact-root /mlflow/artifacts
+    command: >
+      mlflow server 
+      --host 0.0.0.0 
+      --backend-store-uri sqlite:///mlflow.db 
+      --default-artifact-root /mlflow/artifacts
+    restart: unless-stopped
+
+# ADD NETWORK (Optional but recommended)
+networks:
+  default:
+    name: credit-risk-network
