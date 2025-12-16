@@ -74,7 +74,7 @@ try:
             )
             print(f"✓ Transitioned to 'Production' stage")
         
-        print("\n✅ SUCCESS: Model registered in MLflow!")
+        print("\n SUCCESS: Model registered in MLflow!")
         print("   Now your API can load it with:")
         print("   mlflow.sklearn.load_model('models:/credit_risk_model/Production')")
         
