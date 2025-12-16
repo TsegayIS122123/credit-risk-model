@@ -474,3 +474,51 @@ Develop a structured model training process with experiment tracking, model vers
 3. **Feature Importance**: Need deeper analysis of which features drive predictions
 4. **Calibration**: Probability scores may need calibration for production use
 
+## Task 6: Model Deployment and Continuous Integration
+
+### Objective
+Package the trained model into a containerized API and set up a CI/CD pipeline to automate testing and ensure code quality.
+
+### Implementation
+1. **FastAPI REST API**:
+   - Created comprehensive API with endpoints: `/`, `/health`, `/predict`, `/predict-batch`, `/model-info`, `/features`
+   - Integrated Logistic Regression model from Task 5 with 37 features
+   - Implemented Pydantic models for request/response validation
+   - Added automatic OpenAPI documentation at `/docs` and `/redoc`
+
+2. **Containerization**:
+   - Created Dockerfile for reproducible deployments
+   - Implemented docker-compose.yml for multi-service setup (API + MLflow tracking)
+   - Configured health checks and proper volume mounting
+
+3. **CI/CD Pipeline**:
+   - Created GitHub Actions workflow (`.github/workflows/ci.yml`)
+   - Implemented code quality checks with flake8 and black
+   - Added unit testing with pytest
+   - Configured Docker build validation
+   - Set up branch protection rules for main branch
+
+4. **API Features**:
+   - Real-time credit risk probability prediction
+   - Credit score calculation (300-850 range)
+   - Risk categorization (Low/Medium/High)
+   - Batch prediction support
+   - Model information endpoint
+   - Health monitoring endpoint
+
+### Results
+-  API successfully deployed and running on `localhost:8000`
+-  Model loaded with 37 features
+-  All endpoints returning 200 OK status
+-  Interactive documentation available at `/docs`
+-  Docker container builds successfully
+-  CI/CD pipeline validates code quality and tests
+
+### Endpoints Documentation
+- **GET /** - API information
+- **GET /health** - Health check and model status
+- **GET /docs** - Interactive Swagger documentation
+- **POST /predict** - Single customer prediction
+- **POST /predict-batch** - Batch predictions
+- **GET /model-info** - Model metadata and performance
+- **GET /features** - List of features used by model
