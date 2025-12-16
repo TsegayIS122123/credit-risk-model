@@ -33,4 +33,8 @@ mlartifacts/
 
 # OS
 .DS_Store
-Thumbs.db
+Thumbs.dbmlflow.db
+reports/plots/*.png
+models/*.pkl
+mlflow.db
+reports/
