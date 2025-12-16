@@ -1,0 +1,11 @@
+# Ignore everything large
+*
+!src/
+!tests/
+!requirements.txt
+!Dockerfile
+!docker-compose.yml
+!*.py
+!*.md
+!*.yml
+!*.yaml

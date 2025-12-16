@@ -1,4 +1,4 @@
-version: '3.8'
+# Remove the 'version: '3.8'' line to fix the warning
 
 services:
   api:
@@ -10,34 +10,47 @@ services:
       - ./models:/app/models
       - ./reports:/app/reports
       - ./data:/app/data
+      - ./mlflow.db:/app/mlflow.db
+      - ./mlruns:/app/mlruns
     environment:
       - PYTHONPATH=/app
       - PYTHONUNBUFFERED=1
+      - MLFLOW_TRACKING_URI=http://mlflow:5000
+
+    depends_on:
+      mlflow:
+        condition: service_healthy
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health').read()"]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 40s
-    networks:
-      - credit-risk-network
 
   mlflow:
-    image: ghcr.io/mlflow/mlflow:latest
+    image: ghcr.io/mlflow/mlflow:v2.11.3
     container_name: mlflow-tracking
     ports:
       - "5000:5000"
     volumes:
-      - ./mlflow:/mlflow
+      - ./mlruns:/mlflow
       - ./mlflow.db:/mlflow.db
     environment:
       - BACKEND_URI=sqlite:///mlflow.db
       - ARTIFACT_ROOT=/mlflow/artifacts
-    command: mlflow server --host 0.0.0.0 --backend-store-uri sqlite:///mlflow.db --default-artifact-root /mlflow/artifacts
-    networks:
-      - credit-risk-network
+    command: >
+      mlflow server 
+      --host 0.0.0.0 
+      --backend-store-uri sqlite:///mlflow.db 
+      --default-artifact-root /mlflow/artifacts
+      --serve-artifacts
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
 
-networks:
-  credit-risk-network:
-    driver: bridge
+# No need for explicit network - Docker Compose creates one automatically
