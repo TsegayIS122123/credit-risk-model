@@ -16,7 +16,7 @@ services:
       - PYTHONPATH=/app
       - PYTHONUNBUFFERED=1
       - MLFLOW_TRACKING_URI=http://mlflow:5000
-      - CI=${CI:-false}  # Add CI flag for testing mode
+
     depends_on:
       mlflow:
         condition: service_healthy
