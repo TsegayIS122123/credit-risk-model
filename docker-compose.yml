@@ -10,9 +10,11 @@ services:
       - ./models:/app/models
       - ./reports:/app/reports
       - ./data:/app/data
+      - ./mlflow.db:/app/mlflow.db  # Add this for MLflow
     environment:
       - PYTHONPATH=/app
       - PYTHONUNBUFFERED=1
+      - MLFLOW_TRACKING_URI=sqlite:///mlflow.db  # Add this
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
@@ -20,11 +22,9 @@ services:
       timeout: 10s
       retries: 3
       start_period: 40s
-    networks:
-      - credit-risk-network
 
   mlflow:
-    image: ghcr.io/mlflow/mlflow:latest
+    image: ghcr.io/mlflow/mlflow:v2.11.3  # Match version
     container_name: mlflow-tracking
     ports:
       - "5000:5000"
@@ -35,9 +35,3 @@ services:
       - BACKEND_URI=sqlite:///mlflow.db
       - ARTIFACT_ROOT=/mlflow/artifacts
     command: mlflow server --host 0.0.0.0 --backend-store-uri sqlite:///mlflow.db --default-artifact-root /mlflow/artifacts
-    networks:
-      - credit-risk-network
-
-networks:
-  credit-risk-network:
-    driver: bridge
