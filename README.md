@@ -404,3 +404,73 @@ Create a credit risk proxy target variable since we don't have a pre-existing "c
  **Risk Identification**: High-risk cluster aligns with business logic (disengaged customers)  
 **Data Integration**: All transactions have risk labels after merge  
  **Reproducibility**: Fixed random seeds ensure consistent results
+
+## Task 5: Model Training and Tracking
+
+### Objective
+Develop a structured model training process with experiment tracking, model versioning, and unit testing to build a credit risk prediction model.
+
+### Methodology
+1. **Data Preparation**:
+   - Loaded engineered features from Task 3-4
+   - Removed potential data leakage (`FraudResult` column)
+   - Applied SMOTE to handle severe class imbalance (2.5% positive class)
+   - Split data: 80% training, 20% testing with stratification
+
+2. **Model Selection**:
+   - Logistic Regression (baseline with interpretability)
+   - Random Forest (ensemble method for complex patterns)
+   - XGBoost (gradient boosting for high performance)
+
+3. **Hyperparameter Tuning**:
+   - Used RandomizedSearchCV for efficient search
+   - Tuned key parameters for each algorithm
+   - Evaluated using ROC-AUC as primary metric
+
+4. **Experiment Tracking**:
+   - Implemented MLflow for experiment management
+   - Tracked parameters, metrics, and artifacts
+   - Used SQLite backend for local tracking
+
+5. **Evaluation Metrics**:
+   - ROC-AUC Score
+   - F1-Score (important for imbalanced data)
+   - Precision and Recall
+   - Accuracy and Specificity
+   - Confusion Matrix analysis
+
+### Key Findings
+1. **Data Leakage Prevention**: Identified and removed `FraudResult` column which was artificially inflating model performance.
+
+2. **Class Imbalance Challenge**: Original dataset had only 2.5% high-risk customers. Applied SMOTE to create balanced training data.
+
+3. **Model Performance**:
+   - **Logistic Regression**: ROC-AUC = 0.9902, F1 = 0.4503
+   - **Random Forest**: ROC-AUC = 1.0000, F1 = 0.9846
+   - **XGBoost**: ROC-AUC = 1.0000, F1 = 0.9776
+
+4. **Overfitting Detection**: Random Forest and XGBoost show perfect ROC-AUC scores, indicating potential overfitting despite SMOTE application.
+
+5. **Production Model Selection**: Selected **Logistic Regression** for deployment due to:
+   - Realistic performance metrics (not perfect scores)
+   - Better interpretability for financial context
+   - Lower risk of overfitting on synthetic data
+
+### Artifacts Generated
+- **Models**: `models/logistic_regression_model.pkl`, `models/random_forest_model.pkl`, `models/xgboost_model.pkl`
+- **Preprocessing**: `models/scaler.pkl`, `models/feature_names.pkl`
+- **Evaluation**: `reports/model_comparison.csv`, `reports/metrics.json`
+- **Visualizations**: ROC curves and confusion matrices in `reports/plots/`
+- **MLflow Database**: `mlflow.db` with complete experiment history
+
+### Unit Tests
+- Created comprehensive unit tests in `tests/test_data_processing.py`
+- Tested data validation, feature encoding, and model evaluation logic
+- Ensured reproducibility with fixed random seeds
+
+### Limitations and Considerations
+1. **SMOTE Limitations**: Synthetic samples may create unrealistic patterns that models can memorize
+2. **Time-Based Validation**: Future work should implement time-based splits instead of random splits
+3. **Feature Importance**: Need deeper analysis of which features drive predictions
+4. **Calibration**: Probability scores may need calibration for production use
+
